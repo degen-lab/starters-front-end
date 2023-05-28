@@ -328,6 +328,7 @@ export const readOnlyGetCurrentBlock = async () => {
   return cvToJSON(currentBlock).value.value;
 };
 
+
 // get-auto-exchange
 // args: (address principal)
 // what does it do: get the state of auto-exchange function
