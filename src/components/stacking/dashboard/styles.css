@@ -1,3 +1,7 @@
+@import '../../../css/common-page-alignments/styles.css';
+@import '../../../css/buttons/styles.css';
+@import '../../../css/helpers/styles.css';
+
 .dashboard-page-main-container {
   height: calc(100vh - 60px);
   display: flex;
@@ -39,7 +43,7 @@
 }
 
 .dashboard-page-main-container .footer-join-button-container button {
-  width: 200px !important;
+  width: 250px !important;
 }
 
 @media screen and (max-width: 575px) {

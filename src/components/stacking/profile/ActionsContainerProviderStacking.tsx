@@ -1,5 +1,5 @@
 import './styles.css';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import {
   ContractDepositSTXStacking,
   ContractReserveFundsFutureRewardsStacking,
@@ -7,7 +7,6 @@ import {
   ContractSetNewLiquidityProvider,
   ContractUnlockExtraReserveFundsStacking,
 } from '../../../consts/smartContractFunctions';
-import { readOnlyGetLiquidityProvider } from '../../../consts/readOnly';
 import { useAppSelector } from '../../../redux/store';
 import { selectCurrentTheme } from '../../../redux/reducers/user-state';
 import { Alert } from '@mui/material';
@@ -25,8 +24,6 @@ const ActionsContainerProviderStacking = ({ userAddress }: IActionsContainerStac
   const [invalidNewProviderAlertOpen, setInvalidNewProviderAlertOpen] = useState<boolean>(false);
   const appCurrentTheme = useAppSelector(selectCurrentTheme);
 
-  console.log('currentLiquidityProvider', newLiquidityProvider);
-
   const handleUpdateLiquidityProvider = () => {
     if (newLiquidityProvider !== null) {
       try {
@@ -38,7 +35,11 @@ const ActionsContainerProviderStacking = ({ userAddress }: IActionsContainerStac
           setInvalidNewProviderAlertOpen(true);
         }
       }
-      document.getElementById('inputNewLiqProv').value = null;
+      // document.getElementById('inputNewLiqProv').value = null;
+      const element = document.getElementById('inputNewLiqProv') as HTMLInputElement;
+      if (element !== null) {
+        element.value = '';
+      }
     }
   };
 
@@ -141,6 +142,7 @@ const ActionsContainerProviderStacking = ({ userAddress }: IActionsContainerStac
           </button>
         </div>
       </div>
+
       {invalidNewProviderAddress && invalidNewProviderAlertOpen && (
         <Alert
           severity="warning"

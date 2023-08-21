@@ -11,6 +11,7 @@ import { useEffect, useState } from 'react';
 import StackerProfile from './StackerProfile';
 import { network, getExplorerUrl } from '../../../consts/network';
 import { readOnlyLockedBalanceUser } from '../../../consts/readOnly';
+import { useLocation, useNavigate } from 'react-router-dom';
 
 const ProfileStacking = () => {
   const currentRole: UserRoleStacking = useAppSelector(selectCurrentUserRoleStacking);
@@ -21,18 +22,36 @@ const ProfileStacking = () => {
   const [delegatedToPool, setDelegatedToPool] = useState<number>(0);
   const [userUntilBurnHt, setUserUntilBurnHt] = useState<number>(0);
   const userSession = useAppSelector(selectUserSessionState);
+  const localNetwork = network === 'devnet' ? 'testnet' : network;
+  const navigate = useNavigate();
+  const location = useLocation();
+  const basePath = '/stacking/dashboard';
 
   useEffect(() => {
-    const wallet = userSession.loadUserData().profile.stxAddress.testnet;
-    setConnectedWallet(wallet);
+    if (userSession.isUserSignedIn() === false) {
+      navigate(`${basePath}`);
+    } else if (userSession.isUserSignedIn()) {
+      if (currentRole === 'NormalUserStacking') {
+        navigate(`${basePath}`);
+      }
+    }
+  }, [location.pathname, currentRole]);
+
+  useEffect(() => {
+    if (userSession.isUserSignedIn()) {
+      const wallet = userSession.loadUserData().profile.stxAddress[localNetwork];
+      setConnectedWallet(wallet);
+    } else {
+      navigate(`${basePath}`);
+    }
   }, [connectedWallet]);
 
   useEffect(() => {
     if (userSession.isUserSignedIn()) {
-      const args = userSession.loadUserData().profile.stxAddress.testnet;
+      const args = userSession.loadUserData().profile.stxAddress[localNetwork];
       setUserAddress(args);
     }
-  }, [userAddress]);
+  }, []);
 
   useEffect(() => {
     if (userAddress !== null) {
@@ -42,18 +61,20 @@ const ProfileStacking = () => {
 
   useEffect(() => {
     const getLockedBalance = async () => {
-      const wallet = userSession.loadUserData().profile.stxAddress.testnet;
-      console.log(wallet);
-      const userLockedData = await readOnlyLockedBalanceUser(wallet, 'locked-balance');
-      const userDelegatedData = await readOnlyLockedBalanceUser(wallet, 'delegated-balance');
-      const userUntilBurnHtData = await readOnlyLockedBalanceUser(wallet, 'until-burn-ht');
-      setLockedInPool(userLockedData);
-      setDelegatedToPool(userDelegatedData);
-      setUserUntilBurnHt(userUntilBurnHtData);
+      if (userSession.isUserSignedIn() && (currentRole === 'Stacker' || currentRole === 'Provider')) {
+        const wallet = userSession.loadUserData().profile.stxAddress[localNetwork];
+        console.log(wallet);
+        const userLockedData = await readOnlyLockedBalanceUser(wallet, 'locked-balance');
+        const userDelegatedData = await readOnlyLockedBalanceUser(wallet, 'delegated-balance');
+        const userUntilBurnHtData = await readOnlyLockedBalanceUser(wallet, 'until-burn-ht');
+        setLockedInPool(userLockedData);
+        setDelegatedToPool(userDelegatedData);
+        setUserUntilBurnHt(userUntilBurnHtData);
+      }
     };
 
     getLockedBalance();
-  }, []);
+  }, [userAddress]);
 
   const appCurrentTheme = useAppSelector(selectCurrentTheme);
   return (

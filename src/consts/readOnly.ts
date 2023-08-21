@@ -1,5 +1,5 @@
 import { StacksMocknet, StacksMainnet, StacksTestnet } from '@stacks/network';
-import { network } from './network';
+import { apiUrl, network } from './network';
 import { contractMapping, functionMapping } from './contract';
 import {
   callReadOnlyFunction,
@@ -14,19 +14,23 @@ import { convertPrincipalToArg, convertPrincipalToList, fromResultToList, conver
 import { userSession } from '../redux/reducers/user-state';
 
 const contractNetwork =
-  network === 'mainnet' ? new StacksMainnet() : network === 'testnet' ? new StacksTestnet() : new StacksMocknet();
+  network === 'mainnet'
+    ? new StacksMainnet({ url: apiUrl[network] })
+    : network === 'testnet'
+    ? new StacksTestnet({ url: apiUrl[network] })
+    : new StacksMocknet({ url: apiUrl[network] });
+
+const localNetwork = network === 'devnet' ? 'testnet' : network;
 
 const ReadOnlyFunctions = async (
   type: 'mining' | 'stacking' | 'pox',
   function_args: ClarityValue[],
   contractFunctionName: string
 ) => {
-  const userAddress =
-    network === 'mainnet'
-      ? userSession.loadUserData().profile.stxAddress.mainnet
-      : userSession.isUserSignedIn()
-      ? userSession.loadUserData().profile.stxAddress.testnet
-      : contractMapping[type][network].owner;
+  const userAddress = !userSession.isUserSignedIn()
+    ? contractMapping[type][network].owner
+    : userSession.loadUserData().profile.stxAddress[localNetwork];
+
   const readOnlyResults = {
     contractAddress: contractMapping[type][network].contractAddress,
     contractName: contractMapping[type][network].contractName,

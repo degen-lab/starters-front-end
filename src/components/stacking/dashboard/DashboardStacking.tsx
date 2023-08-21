@@ -18,6 +18,11 @@ import {
   readOnlyGetStackAmounThisCycleStacking,
   ReadOnlyGetStackersList,
 } from '../../../consts/readOnly';
+import { network } from '../../../consts/network';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { contractMapping } from '../../../consts/contract';
+
+import { AppConfig, UserSession } from '@stacks/connect';
 
 const DashboardStacking = () => {
   const currentRole: UserRoleStacking = useAppSelector(selectCurrentUserRoleStacking);
@@ -29,79 +34,97 @@ const DashboardStacking = () => {
   const [returnCovered, setReturnCovered] = useState<number | null>(null);
   const [minimumDepositProvider, setMinimumDepositProvider] = useState<number | null>(null);
   const [userAddress, setUserAddress] = useState<string | null>(null);
-
+  const localNetwork = network === 'devnet' ? 'testnet' : network;
   const userSession = useAppSelector(selectUserSessionState);
-
   const appCurrentTheme = useAppSelector(selectCurrentTheme);
 
   useEffect(() => {
     if (userSession.isUserSignedIn()) {
-      const args = userSession.loadUserData().profile.stxAddress.testnet;
+      const args = userSession.loadUserData().profile.stxAddress[localNetwork];
       setUserAddress(args);
+    } else {
+      const defaultAddressWhenUserNotLoggedIn = contractMapping.stacking[network].owner;
+      setUserAddress(defaultAddressWhenUserNotLoggedIn);
+      // console.log('user session logged in', userSession);
+      console.log('user address NOT logged in', userAddress);
     }
-  }, [userAddress]);
+  }, []);
 
   useEffect(() => {
     const getCurrentLiquidityProvider = async () => {
-      const liquidityProvider = await readOnlyGetLiquidityProvider();
-      setCurrentLiquidityProvider(liquidityProvider);
+      if (userAddress) {
+        const liquidityProvider = await readOnlyGetLiquidityProvider();
+        setCurrentLiquidityProvider(liquidityProvider);
+      }
     };
 
     getCurrentLiquidityProvider();
-  }, [currentLiquidityProvider]);
+  }, [currentLiquidityProvider, userAddress]);
 
   useEffect(() => {
     const getReturnCovered = async () => {
-      const returnValue = await readOnlyGetReturnStacking();
-      setReturnCovered(parseFloat(returnValue));
+      if (userAddress) {
+        const returnValue = await readOnlyGetReturnStacking();
+        setReturnCovered(parseFloat(returnValue));
+      }
     };
 
     getReturnCovered();
-  }, []);
+  }, [userAddress]);
 
   useEffect(() => {
     const getMinimumDepositProvider = async () => {
-      const minimum = await readOnlyGetMinimumDepositLiquidityProviderStacking();
-      setMinimumDepositProvider(parseFloat(minimum));
+      if (userAddress) {
+        const minimum = await readOnlyGetMinimumDepositLiquidityProviderStacking();
+        setMinimumDepositProvider(parseFloat(minimum));
+      }
     };
 
     getMinimumDepositProvider();
-  }, []);
+  }, [userAddress]);
 
   useEffect(() => {
     const getStackersList = async () => {
-      const { value } = await ReadOnlyGetStackersList();
-      const parsedStackersList =
-        value.length !== 0 ? value.map((stacker: { type: string; value: string }) => stacker.value) : [];
-      setStackersList(parsedStackersList);
+      if (userAddress) {
+        const { value } = await ReadOnlyGetStackersList();
+        const parsedStackersList =
+          value.length !== 0 ? value.map((stacker: { type: string; value: string }) => stacker.value) : [];
+        setStackersList(parsedStackersList);
+      }
     };
 
     getStackersList();
-  }, []);
+  }, [userAddress]);
 
   useEffect(() => {
     const getBlocksRewarded = async () => {
-      const blocks = await readOnlyGetBlocksRewardedStacking();
-      setBlocksRewarded(blocks);
+      if (userAddress) {
+        const blocks = await readOnlyGetBlocksRewardedStacking();
+        setBlocksRewarded(blocks);
+      }
     };
     getBlocksRewarded();
-  }, [blocksRewarded]);
+  }, [blocksRewarded, userAddress]);
 
   useEffect(() => {
     const getBitcoinRewards = async () => {
-      const bitcoin = await readOnlyGetBitcoinRewardsStacking();
-      setBitcoinRewards(bitcoin);
+      if (userAddress) {
+        const bitcoin = await readOnlyGetBitcoinRewardsStacking();
+        setBitcoinRewards(bitcoin);
+      }
     };
     getBitcoinRewards();
-  }, [bitcoinRewards]);
+  }, [bitcoinRewards, userAddress]);
 
   useEffect(() => {
     const getStacksAmountThisCycle = async () => {
-      const stacks = await readOnlyGetStackAmounThisCycleStacking();
-      setStacksAmountThisCycle(stacks);
+      if (userAddress) {
+        const stacks = await readOnlyGetStackAmounThisCycleStacking();
+        setStacksAmountThisCycle(stacks);
+      }
     };
     getStacksAmountThisCycle();
-  }, [stacksAmountThisCycle]);
+  }, [stacksAmountThisCycle, userAddress]);
 
   return (
     <div className="dashboard-page-main-container">

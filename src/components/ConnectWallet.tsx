@@ -17,10 +17,11 @@ import {
 import { useLocation } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import {
-  readOnlyAddressStatusMining,
+  // readOnlyAddressStatusMining,
   readOnlyAddressStatusStacking,
   readOnlyGetLiquidityProvider,
 } from '../consts/readOnly';
+import { network } from '../consts/network';
 
 interface ConnectWalletProps {
   currentTheme: string;
@@ -33,12 +34,19 @@ const ConnectWallet = ({ currentTheme }: ConnectWalletProps) => {
   const [connectedWallet, setConnectedWallet] = useState<string | null>(null);
   const userSession = useAppSelector(selectUserSessionState);
   const dispatch = useAppDispatch();
-
+  const location = useLocation();
   const appCurrentTheme = useAppSelector(selectCurrentTheme);
-
   const currentRoleMining = useAppSelector(selectCurrentUserRoleMining);
   const currentRoleStacking = useAppSelector(selectCurrentUserRoleStacking);
-  const location = useLocation();
+  const localNetwork = network === 'devnet' ? 'testnet' : network;
+  const [userAddress, setUserAddress] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (userSession.isUserSignedIn()) {
+      const args = userSession.loadUserData().profile.stxAddress[localNetwork];
+      setUserAddress(args);
+    }
+  }, [userAddress]);
 
   const controlAccessRoutes = () => {
     if (location.pathname !== '/') {
@@ -50,23 +58,23 @@ const ConnectWallet = ({ currentTheme }: ConnectWalletProps) => {
 
   useEffect(() => {
     if (userSession.isUserSignedIn()) {
-      const wallet = userSession.loadUserData().profile.stxAddress.testnet;
+      const wallet = userSession.loadUserData().profile.stxAddress[localNetwork];
       setConnectedWallet(wallet);
     }
   }, [connectedWallet]);
 
-  useEffect(() => {
-    const fetchStatus = async () => {
-      if (userSession.isUserSignedIn()) {
-        const args = userSession.loadUserData().profile.stxAddress.testnet;
-        const statusMining = await readOnlyAddressStatusMining(args);
-        setFinalStatusMining(statusMining);
-        updateUserRoleActionMining(finalStatusMining);
-      }
-    };
+  // useEffect(() => {
+  //   const fetchStatus = async () => {
+  //     if (userSession.isUserSignedIn()) {
+  //       const args = userSession.loadUserData().profile.stxAddress[localNetwork];
+  //       const statusMining = await readOnlyAddressStatusMining(args);
+  //       setFinalStatusMining(statusMining);
+  //       updateUserRoleActionMining(finalStatusMining);
+  //     }
+  //   };
 
-    fetchStatus();
-  }, [finalStatusMining]);
+  //   fetchStatus();
+  // }, [finalStatusMining]);
 
   // useEffect(() => {
   //   const getCurrentLiquidityProvider = async () => {
@@ -80,7 +88,7 @@ const ConnectWallet = ({ currentTheme }: ConnectWalletProps) => {
   useEffect(() => {
     const fetchStatusStacking = async () => {
       if (userSession.isUserSignedIn()) {
-        const args = userSession.loadUserData().profile.stxAddress.testnet;
+        const args = userSession.loadUserData().profile.stxAddress[localNetwork];
         const statusStacking = await readOnlyAddressStatusStacking(args);
         setFinalStatusStacking(statusStacking);
         updateUserRoleActionStacking(finalStatusStacking);
